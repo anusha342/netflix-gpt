@@ -11,28 +11,15 @@ import { changeLanguage } from "../utils/configSlice";
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const user = useSelector((store) => store.user);
   const showGptSearch = useSelector((store) => store.gpt.showGptSearch);
-  const handleSignOut = () => {
-    signOut(auth)
-      .then(() => {})
-      .catch((error) => {
-        navigate("/error");
-      });
-  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         const { uid, email, displayName, photoURL } = user;
-        dispatch(
-          addUser({
-            uid: uid,
-            email: email,
-            displayName: displayName,
-            photoURL: photoURL,
-          })
-        );
+        dispatch(addUser({ uid, email, displayName, photoURL }));
         navigate("/browse");
       } else {
         dispatch(removeUser());
@@ -40,53 +27,93 @@ const Header = () => {
       }
     });
 
-    // Unsiubscribe when component unmounts
     return () => unsubscribe();
   }, []);
 
-  const handleGptSearchClick = () => {
-    // Toggle GPT Search
-    dispatch(toggleGptSearchView());
-  };
-
-  const handleLanguageChange = (e) => {
-    dispatch(changeLanguage(e.target.value));
+  const handleSignOut = () => {
+    signOut(auth).catch(() => navigate("/error"));
   };
 
   return (
-    <div className="absolute w-screen px-8 py-2 bg-gradient-to-b from-black z-10 flex flex-col md:flex-row justify-between">
-      <img className="w-44 mx-auto md:mx-0" src={LOGO} alt="logo" />
-      {user && (
-        <div className="flex p-2 justify-between">
-          {showGptSearch && (
-            <select
-              className="p-2 m-2 bg-gray-900 text-white"
-              onChange={handleLanguageChange}
+    <header
+      className="
+        fixed top-0 left-0 w-full z-50
+        bg-gradient-to-b from-black/90 to-transparent
+      "
+    >
+      <div className="flex items-center justify-between px-4 sm:px-8 py-3">
+        {/* Logo */}
+        <img
+          src={LOGO}
+          alt="Netflix Logo"
+          className="w-28 sm:w-40 cursor-pointer"
+          onClick={() => navigate("/browse")}
+        />
+
+        {/* Right Section */}
+        {user && (
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Language Selector (only in GPT mode, hidden on mobile) */}
+            {showGptSearch && (
+              <select
+                className="
+                  hidden sm:block
+                  bg-black bg-opacity-70
+                  text-white
+                  text-sm
+                  px-2 py-1
+                  rounded
+                  outline-none
+                "
+                onChange={(e) => dispatch(changeLanguage(e.target.value))}
+              >
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <option key={lang.identifier} value={lang.identifier}>
+                    {lang.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* GPT Toggle */}
+            <button
+              onClick={() => dispatch(toggleGptSearchView())}
+              className="
+                bg-purple-700 hover:bg-purple-800
+                text-white
+                text-xs sm:text-sm
+                px-3 py-1.5
+                rounded-md
+                font-medium
+                transition
+              "
             >
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <option key={lang.identifier} value={lang.identifier}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
-          )}
-          <button
-            className="py-2 px-4 mx-4 my-2 bg-purple-800 text-white rounded-lg"
-            onClick={handleGptSearchClick}
-          >
-            {showGptSearch ? "Homepage" : "GPT Search"}
-          </button>
-          <img
-            className="hidden md:block w-12 h-12"
-            alt="usericon"
-            src={user?.photoURL}
-          />
-          <button onClick={handleSignOut} className="font-bold text-white ">
-            (Sign Out)
-          </button>
-        </div>
-      )}
-    </div>
+              {showGptSearch ? "Home" : "GPT Search"}
+            </button>
+
+            {/* User Avatar (hidden on mobile) */}
+            <img
+              src={user.photoURL}
+              alt="user"
+              className="hidden sm:block w-9 h-9 rounded-full"
+            />
+
+            {/* Sign Out */}
+            <button
+              onClick={handleSignOut}
+              className="
+                text-white
+                text-xs sm:text-sm
+                hover:underline
+              "
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
+      </div>
+    </header>
   );
 };
+
 export default Header;

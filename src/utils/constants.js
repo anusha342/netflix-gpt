@@ -8,14 +8,14 @@ export const API_OPTIONS = {
   method: 'GET',
   headers: {
     accept: 'application/json',
-    Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3NGIzZjczMGM5YjhlODI0M2Q4MzlkMWNlZTNmOWIwOCIsIm5iZiI6MTc2NTk2ODU3NC4xNTEsInN1YiI6IjY5NDI4YWJlZDM4NzZlYTUxNDdhMmIyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.SCMfY2qiGcxTt02Y2f2FGW7buHXeeJskAbmdjSx4ZB0'
+    Authorization: 'Bearer' + process.env.REACT_APP_TMDB_KEY,
   },
 };
 
 export const IMG_CDN_URL = "https://image.tmdb.org/t/p/w500";
 
 export const BG_URL =
-  "https://assets.nflxext.com/ffe/siteui/vlv3/fc164b4b-f085-44ee-bb7f-ec7df8539eff/d23a1608-7d90-4da1-93d6-bae2fe60a69b/IN-en-20230814-popsignuptwoweeks-perspective_alpha_website_large.jpg";
+  "https://assets.nflxext.com/ffe/siteui/vlv3/c81956f1-5750-454c-9b3c-7a4d990d3d06/web/IN-en-20251208-TRIFECTA-perspective_d69f5f82-9a35-45d7-a7b6-9af6e0643bf5_small.jpg";
 
 export const SUPPORTED_LANGUAGES = [
   { identifier: "en", name: "English" },

@@ -1,16 +1,19 @@
-import openai from "../utils/openai";
 import { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import openai from "../utils/openai";
 import lang from "../utils/languageConstants";
 import { API_OPTIONS } from "../utils/constants";
-import { addGptMovieResult } from "../utils/gptSlice";
+import {
+  addGptMovieResult,
+  setGptError,
+} from "../utils/gptSlice";
 
 const GptSearchBar = () => {
   const dispatch = useDispatch();
   const langKey = useSelector((store) => store.config.lang);
   const searchText = useRef(null);
 
-  // search movie in TMDB
+  // 🔍 Search movie in TMDB
   const searchMovieTMDB = async (movie) => {
     const data = await fetch(
       "https://api.themoviedb.org/3/search/movie?query=" +
@@ -19,64 +22,128 @@ const GptSearchBar = () => {
       API_OPTIONS
     );
     const json = await data.json();
-
     return json.results;
   };
 
+  // 🎯 Handle GPT Search
   const handleGptSearchClick = async () => {
-    console.log(searchText.current.value);
-    // Make an API call to GPT API and get Movie Results
+    const query = searchText.current.value.trim();
 
-    const gptQuery =
-      "Act as a Movie Recommendation system and suggest some movies for the query : " +
-      searchText.current.value +
-      ". only give me names of 5 movies, comma seperated like the example result given ahead. Example Result: Gadar, Sholay, Don, Golmaal, Koi Mil Gaya";
-
-    const gptResults = await openai.chat.completions.create({
-      messages: [{ role: "user", content: gptQuery }],
-      model: "gpt-3.5-turbo",
-    });
-
-    if (!gptResults.choices) {
-      // TODO: Write Error Handling
+    // ❌ Empty input
+    if (!query) {
+      dispatch(
+        setGptError("Please enter a movie name, genre, or mood.")
+      );
+      return;
     }
 
-    console.log(gptResults.choices?.[0]?.message?.content);
+    try {
+      const gptQuery =
+        "Act as a movie recommendation system and suggest 5 movies for: " +
+        query +
+        ". Return only comma separated movie names.";
 
-    // Andaz Apna Apna, Hera Pheri, Chupke Chupke, Jaane Bhi Do Yaaro, Padosan
-    const gptMovies = gptResults.choices?.[0]?.message?.content.split(",");
+      const gptResults = await openai.chat.completions.create({
+        messages: [{ role: "user", content: gptQuery }],
+        model: "gpt-4o-mini",
+      });
 
-    // ["Andaz Apna Apna", "Hera Pheri", "Chupke Chupke", "Jaane Bhi Do Yaaro", "Padosan"]
+      if (!gptResults.choices?.length) {
+        dispatch(setGptError("No recommendations found."));
+        return;
+      }
 
-    // For each movie I will search TMDB API
+      // 🎬 Parse GPT movies safely
+      const gptMovies = gptResults.choices[0].message.content
+        .split(",")
+        .map((movie) => movie.trim())
+        .filter(Boolean);
 
-    const promiseArray = gptMovies.map((movie) => searchMovieTMDB(movie));
-    // [Promise, Promise, Promise, Promise, Promise]
+      if (gptMovies.length === 0) {
+        dispatch(setGptError("No movie suggestions found."));
+        return;
+      }
 
-    const tmdbResults = await Promise.all(promiseArray);
+      // 🔎 Search TMDB for each movie
+      const promiseArray = gptMovies.map((movie) =>
+        searchMovieTMDB(movie)
+      );
 
-    console.log(tmdbResults);
+      const tmdbResults = await Promise.all(promiseArray);
 
-    dispatch(
-      addGptMovieResult({ movieNames: gptMovies, movieResults: tmdbResults })
-    );
+      // ❌ No TMDB results at all
+      const hasAnyResults = tmdbResults.some(
+        (result) => result && result.length > 0
+      );
+
+      if (!hasAnyResults) {
+        dispatch(
+          setGptError(
+            "We couldn’t find any matching movies. Try a different search."
+          )
+        );
+        return;
+      }
+
+      // ✅ Success
+      dispatch(
+        addGptMovieResult({
+          movieNames: gptMovies,
+          movieResults: tmdbResults,
+        })
+      );
+    } catch (error) {
+      dispatch(
+        setGptError(
+          "If you want it to suggest movies to you ,then use your openai's secret key...😣🥲"
+        )
+      );
+    }
   };
 
   return (
-    <div className="pt-[35%] md:pt-[10%] flex justify-center">
+    <div className="flex justify-center px-4">
       <form
-        className="w-full md:w-1/2 bg-black grid grid-cols-12"
         onSubmit={(e) => e.preventDefault()}
+        className="
+          w-[92%] sm:w-[600px]
+          bg-black bg-opacity-80
+          rounded-md
+          p-4
+          flex flex-col sm:flex-row
+          gap-3
+          shadow-2xl
+        "
       >
         <input
           ref={searchText}
           type="text"
-          className=" p-4 m-4 col-span-9"
           placeholder={lang[langKey].gptSearchPlaceholder}
+          className="
+            flex-1
+            p-4
+            bg-gray-700
+            text-white
+            rounded
+            outline-none
+            focus:ring-2 focus:ring-red-600
+          "
         />
+
         <button
-          className="col-span-3 m-4 py-2 px-4 bg-red-700 text-white rounded-lg"
+          type="button"
           onClick={handleGptSearchClick}
+          className="
+            px-6
+            py-3
+            bg-red-600
+            hover:bg-red-700
+            text-white
+            rounded
+            font-semibold
+            text-lg
+            transition
+          "
         >
           {lang[langKey].search}
         </button>
@@ -84,4 +151,5 @@ const GptSearchBar = () => {
     </div>
   );
 };
+
 export default GptSearchBar;

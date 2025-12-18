@@ -1,17 +1,32 @@
-const VideoTitle = ({ title, overview }) => {
+const VideoTitle = ({ title, overview, onPlay, onMoreInfo }) => {
   return (
-    <div className="w-screen aspect-video pt-[20%] px-6 md:px-24 absolute text-white bg-gradient-to-r from-black">
-      <h1 className="text-2xl md:text-6xl font-bold">{title}</h1>
-      <p className="hidden md:inline-block py-6 text-lg w-1/4">{overview}</p>
-      <div className="my-4 md:m-0">
-        <button className=" bg-white text-black py-1 md:py-4 px-3 md:px-12 text-xl  rounded-lg hover:bg-opacity-80">
-          ▶️ Play
+    <div className="absolute top-[22%] sm:top-[28%] md:top-[32%] px-4 sm:px-8 md:px-16 z-20 text-white max-w-xl">
+      <h1 className="text-2xl sm:text-4xl md:text-6xl font-extrabold">
+        {title}
+      </h1>
+
+      {/* Only 2 lines */}
+      <p className="hidden sm:block mt-3 text-sm sm:text-base text-gray-200 line-clamp-2">
+        {overview}
+      </p>
+
+      <div className="flex flex-wrap gap-3 mt-5">
+        <button
+          onClick={onPlay}
+          className="bg-white text-black px-5 py-2 rounded-md font-semibold text-sm sm:text-lg hover:bg-opacity-80"
+        >
+          ▶ Play
         </button>
-        <button className="hidden md:inline-block mx-2  bg-gray-500 text-white p-4 px-12 text-xl bg-opacity-50 rounded-lg">
-          More Info
+
+        <button
+          onClick={onMoreInfo}
+          className="bg-gray-600 bg-opacity-70 text-white px-5 py-2 rounded-md font-semibold text-sm sm:text-lg hover:bg-opacity-50"
+        >
+          ⓘ More Info
         </button>
       </div>
     </div>
   );
 };
+
 export default VideoTitle;
