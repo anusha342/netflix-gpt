@@ -13,7 +13,7 @@ const GptSearchBar = () => {
   const langKey = useSelector((store) => store.config.lang);
   const searchText = useRef(null);
 
-  // 🔍 Search movie in TMDB
+  //  Search movie in TMDB
   const searchMovieTMDB = async (movie) => {
     const data = await fetch(
       "https://api.themoviedb.org/3/search/movie?query=" +
@@ -25,11 +25,11 @@ const GptSearchBar = () => {
     return json.results;
   };
 
-  // 🎯 Handle GPT Search
+  // Handle GPT Search
   const handleGptSearchClick = async () => {
     const query = searchText.current.value.trim();
 
-    // ❌ Empty input
+    // Empty input
     if (!query) {
       dispatch(
         setGptError("Please enter a movie name, genre, or mood.")
@@ -53,7 +53,7 @@ const GptSearchBar = () => {
         return;
       }
 
-      // 🎬 Parse GPT movies safely
+      //  Parse GPT movies safely
       const gptMovies = gptResults.choices[0].message.content
         .split(",")
         .map((movie) => movie.trim())
@@ -64,14 +64,14 @@ const GptSearchBar = () => {
         return;
       }
 
-      // 🔎 Search TMDB for each movie
+      //  Search TMDB for each movie
       const promiseArray = gptMovies.map((movie) =>
         searchMovieTMDB(movie)
       );
 
       const tmdbResults = await Promise.all(promiseArray);
 
-      // ❌ No TMDB results at all
+      //  No TMDB results at all
       const hasAnyResults = tmdbResults.some(
         (result) => result && result.length > 0
       );
@@ -85,7 +85,7 @@ const GptSearchBar = () => {
         return;
       }
 
-      // ✅ Success
+      //  Success
       dispatch(
         addGptMovieResult({
           movieNames: gptMovies,
